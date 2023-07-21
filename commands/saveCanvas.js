@@ -3,9 +3,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('save_canvas')
-		.setDescription('Save the canvas to a SVG file'),
+		.setDescription('Save the canvas'),
 	async execute(interaction, manager) {
         manager.canvasManager.save();
-		interaction.reply("Canvas saved!");
+		interaction.reply({ content: "Canvas saved!", ephemeral: true });
 	},
 };
