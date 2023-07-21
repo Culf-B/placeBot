@@ -1,8 +1,6 @@
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('node:fs');
-const width = 50;
-const height = 50;
-const gsMultiplier = 20;
+const { width, height, gsMultiplier } = require('./data/canvasProperties.json')
 
 // Create blank canvas
 canvas = createCanvas(width, height);
@@ -16,9 +14,6 @@ fs.writeFileSync('./data/canvas.png', canvas.toBuffer("image/png"));
 // Create Blank guideline canvas
 canvas = createCanvas((width + 1) * gsMultiplier, (height + 1) * gsMultiplier);
 ctx = canvas.getContext('2d');
-
-ctx.fillStyle = 'white';
-ctx.fillRect(0, 0, (width + 1) * gsMultiplier, (height + 1) * gsMultiplier);
 
 ctx.strokeStyle = 'black';
 ctx.fillStyle = 'black';
