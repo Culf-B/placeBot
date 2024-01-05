@@ -77,7 +77,7 @@ module.exports = {
         }
         this.setup = function(serverData, serverId, channelId) {
             this.client.channels.fetch(channelId).then(channel => {
-                channel.send("Test (:").then(message => {
+                channel.send({content: "Test (:", files: [this.guidelineCanvas.toBuffer('image/png')] }).then(message => {
                     serverData[serverId][1] = message.id;
                     console.log(serverData);
                 });

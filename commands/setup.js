@@ -11,7 +11,8 @@ module.exports = {
 				.setRequired(true)
 				// Ensure the user can only select a TextChannel for output
 				.addChannelTypes(ChannelType.GuildText)
-		),
+		)
+		.setDefaultMemberPermissions(0),
 	async execute(interaction, manager) {
 		serverId = interaction.options.getChannel('channel').guild.id;
 		channelId = interaction.options.getChannel('channel').id;
