@@ -5,7 +5,7 @@ const Manager = require('./classes/manager.js');
 
 // Init client
 const client = new Client({ intents: [] });
-const manager = new Manager.Manager();
+const manager = new Manager.Manager(client);
 
 // Load commands
 client.commands = new Collection();

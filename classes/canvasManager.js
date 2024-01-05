@@ -5,7 +5,9 @@ const gWidth = (width + 1) * gsMultiplier;
 const gHeight = (height + 1) * gsMultiplier;
 
 module.exports = {
-    CanvasManager: function() {
+    CanvasManager: function(client) {
+        this.client = client;
+
         this.canvas = createCanvas(width, height);
         this.ctx = this.canvas.getContext('2d');
         
@@ -72,6 +74,14 @@ module.exports = {
             this.ctx.fillStyle = this.colors[color];
             this.ctx.fillRect(x, y, 1, 1);
             this.updateGuidelineCanvas();
+        }
+        this.setup = function(serverData, serverId, channelId) {
+            this.client.channels.fetch(channelId).then(channel => {
+                channel.send("Test (:").then(message => {
+                    serverData[serverId][1] = message.id;
+                    console.log(serverData);
+                });
+            });
         }
     }
 }

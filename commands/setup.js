@@ -17,7 +17,7 @@ module.exports = {
 		channelId = interaction.options.getChannel('channel').id;
 		
 		try {
-			manager.serverManager.updateServerChannel(serverId, channelId);
+			manager.serverManager.updateServerChannel(manager.canvasManager, serverId, channelId);
 			interaction.reply({ content: "Channel set to \"" + interaction.options.getChannel('channel').name + "\"", ephemeral: true });
 		} catch (error) {
 			console.log("Error when updating channel for server with ID: " + serverId + " to channel with ID: " + channelId + "\n" + error);
