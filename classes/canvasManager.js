@@ -3,10 +3,13 @@ const { width, height, gsMultiplier } = require('../data/canvasProperties.json')
 const fs = require('node:fs');
 const gWidth = (width + 1) * gsMultiplier;
 const gHeight = (height + 1) * gsMultiplier;
+const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     CanvasManager: function(client) {
         this.client = client;
+        this.embed;
+        this.messageFileAttachments;
 
         this.canvas = createCanvas(width, height);
         this.ctx = this.canvas.getContext('2d');
@@ -34,7 +37,17 @@ module.exports = {
 
                     this.updateGuidelineCanvas();
 
-                    console.log("Canvas loaded!");
+                    this.log("Canvas loaded");
+
+                    this.updateAttachments();
+                    this.embed = new EmbedBuilder()
+                        .setColor(0x0099FF)
+                        .setTitle('Discord Place')
+                        .setDescription('Will update in ???')
+                        .setImage('attachment://canvas.png')
+                        .setTimestamp();
+    
+                    this.log("Embed loaded");
                 });
             });
         }
@@ -51,6 +64,10 @@ module.exports = {
             this.gCtx.drawImage(this.canvas, gsMultiplier, gsMultiplier, gWidth - gsMultiplier, gHeight - gsMultiplier);
             this.ctx.restore();
             this.gCtx.drawImage(this.guidelineTemplateCanvas, 0, 0, gWidth, gHeight);
+        }
+        
+        this.updateAttachments = function() {
+            this.messageFileAttachments = new AttachmentBuilder(this.guidelineCanvas.toBuffer('image/png'), {'name': 'canvas.png'});
         }
         
         this.draw = function(x, y, color) {
@@ -77,11 +94,14 @@ module.exports = {
         }
         this.setup = function(serverData, serverId, channelId) {
             this.client.channels.fetch(channelId).then(channel => {
-                channel.send({content: "Test (:", files: [this.guidelineCanvas.toBuffer('image/png')] }).then(message => {
+                channel.send({embeds:  [this.embed], files: [this.messageFileAttachments] }).then(message => {
                     serverData[serverId][1] = message.id;
                     console.log(serverData);
                 });
             });
+        }
+        this.log = function(text) {
+            console.log("Canvasmanager: " + text);
         }
     }
 }
