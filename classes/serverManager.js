@@ -16,7 +16,7 @@ module.exports = {
             fs.writeFileSync('./data/serverdata.json', JSON.stringify(this.servers));
         }
 
-        this.updateServerChannel = function(canvasManager, serverId, channelId) {
+        this.updateServerChannel = async function(canvasManager, serverId, channelId) {
             // If this server has never been setup before, setup data structure first
             if (this.servers[serverId] != undefined) {
                 // Make sure the channel has been changed
@@ -24,7 +24,7 @@ module.exports = {
                     // Update data
                     this.servers[serverId][0] = channelId;
                     // Setup channel image message with canvasManager
-                    canvasManager.setup(this.servers, serverId, channelId);
+                    await canvasManager.setup(this.servers, serverId, channelId);
                     // Save
                     this.save();
                 }

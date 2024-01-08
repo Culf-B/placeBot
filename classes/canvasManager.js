@@ -11,6 +11,10 @@ module.exports = {
         this.client = client;
         this.embed;
         this.messageFileAttachments;
+        this.messageObjects;
+        this.messageUpdateTime = 5 // minutes
+        this.canvasChanged = false;
+
         this.logger = new logger.Logger('CanvasManager');
 
         this.canvas = createCanvas(width, height);
@@ -53,6 +57,29 @@ module.exports = {
                 });
             });
         }
+
+        this.loadMessages = async function(serverData) {
+            this.messageObjects = {};
+            for (var serverId in serverData) {
+                this.currentChannel = await this.client.channels.fetch(serverData[serverId][0])
+                this.currentMessage = await this.currentChannel.messages.fetch(serverData[serverId][1])
+                this.messageObjects[serverId] = this.currentMessage;
+            }
+        }
+        this.updateMessages = async function() {
+            this.updateAttachments();
+            for (var key in this.messageObjects) {
+                this.updateTimestamp = Math.round(Date.now() / 1000 + this.messageUpdateTime * 60);
+                this.embed = new EmbedBuilder()
+                        .setColor(0x0099FF)
+                        .setTitle('Discord Place')
+                        .setDescription(`Will update <t:${this.updateTimestamp}:R>`)
+                        .setImage('attachment://canvas.png')
+                        .setTimestamp();
+                this.messageObjects[key].edit({ embeds: [this.embed], files: [this.messageFileAttachments]});
+            }
+            this.log("Messages updated")
+        }
         this.save = function() {
             fs.writeFileSync('./data/canvas.png', this.canvas.toBuffer('image/png'));
             fs.writeFileSync('./data/test.png', this.guidelineCanvas.toBuffer('image/png'));
@@ -70,6 +97,7 @@ module.exports = {
         }
         
         this.updateAttachments = function() {
+            this.updateGuidelineCanvas();
             this.messageFileAttachments = new AttachmentBuilder(this.guidelineCanvas.toBuffer('image/png'), {'name': 'canvas.png'});
         }
         
@@ -95,13 +123,10 @@ module.exports = {
             this.ctx.fillRect(x, y, 1, 1);
             this.updateGuidelineCanvas();
         }
-        this.setup = function(serverData, serverId, channelId) {
-            this.client.channels.fetch(channelId).then(channel => {
-                channel.send({embeds:  [this.embed], files: [this.messageFileAttachments] }).then(message => {
-                    serverData[serverId][1] = message.id;
-                    console.log(serverData);
-                });
-            });
+        this.setup = async function(serverData, serverId, channelId) {
+            this.currentSetupChannel = await this.client.channels.fetch(channelId);
+            this.currentSetupMessage = await this.currentSetupChannel.send({embeds:  [this.embed], files: [this.messageFileAttachments] });
+            serverData[serverId][1] = this.currentSetupMessage.id;
         }
         this.log = function(message) {
             this.logger.log(message);
