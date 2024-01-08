@@ -4,12 +4,14 @@ const fs = require('node:fs');
 const gWidth = (width + 1) * gsMultiplier;
 const gHeight = (height + 1) * gsMultiplier;
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
+const logger = require('../tools/logger.js');
 
 module.exports = {
     CanvasManager: function(client) {
         this.client = client;
         this.embed;
         this.messageFileAttachments;
+        this.logger = new logger.Logger('CanvasManager');
 
         this.canvas = createCanvas(width, height);
         this.ctx = this.canvas.getContext('2d');
@@ -54,6 +56,7 @@ module.exports = {
         this.save = function() {
             fs.writeFileSync('./data/canvas.png', this.canvas.toBuffer('image/png'));
             fs.writeFileSync('./data/test.png', this.guidelineCanvas.toBuffer('image/png'));
+            this.log("Canvas saved")
         }
 
         this.updateGuidelineCanvas = function() {
@@ -100,8 +103,8 @@ module.exports = {
                 });
             });
         }
-        this.log = function(text) {
-            console.log("Canvasmanager: " + text);
+        this.log = function(message) {
+            this.logger.log(message);
         }
     }
 }

@@ -1,13 +1,15 @@
 const fs = require('node:fs');
-const canvasManager = require('./canvasManager');
+const logger = require('../tools/logger.js');
 
 module.exports = {
     ServerManager: function() {
         this.servers = {};
+        this.logger = new logger.Logger('ServerManager');
 
         this.load = function() {
             this.servers = JSON.parse(fs.readFileSync('./data/serverdata.json',
             { encoding: 'utf8', flag: 'r' }));
+            this.log("Servers loaded");
         }
 
         this.save = function() {
@@ -33,6 +35,9 @@ module.exports = {
                 // Save
                 this.save();
             }
+        }
+        this.log = function(message) {
+            this.logger.log(message);
         }
     }
 }

@@ -2,10 +2,12 @@ const fs = require('node:fs');
 const { Client, Collection, Intents } = require('discord.js');
 const { token } = require('./config.json');
 const Manager = require('./classes/manager.js');
+const loggerTool = require('./tools/logger.js');
 
-// Init client
+// Init
 const client = new Client({ intents: [] });
 const manager = new Manager.Manager(client);
+const logger = new loggerTool.Logger('Main');
 
 // Load commands
 client.commands = new Collection();
@@ -18,7 +20,8 @@ for (const file of commandFiles) {
 client.cooldowns = new Collection();
 
 client.once('ready', () => {
-	console.log('Ready!');
+	logger.log('Client is ready');
+	manager.tokenRequiredLoading();
 });
 
 client.on('interactionCreate', async interaction => {
