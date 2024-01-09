@@ -14,6 +14,7 @@ module.exports = {
         this.messageObjects;
         this.messageUpdateTime = 5 // minutes
         this.canvasChanged = false;
+        this.messagesUpdatedByInterval;
 
         this.logger = new logger.Logger('CanvasManager');
 
@@ -33,6 +34,9 @@ module.exports = {
         this.gCtx.webkitImageSmoothingEnabled = false;
         this.gCtx.mozImageSmoothingEnabled = false;
         this.gCtx.imageSmoothingEnabled = false;
+
+        this.changesMade = false;
+        this.updateWhenChanged = true;
 
         this.load = function() {
             loadImage('./data/canvas.png').then((image) => {
@@ -69,14 +73,27 @@ module.exports = {
         this.updateMessages = async function() {
             this.updateAttachments();
             for (var key in this.messageObjects) {
-                this.updateTimestamp = Math.round(Date.now() / 1000 + this.messageUpdateTime * 60);
-                this.embed = new EmbedBuilder()
+                if (this.changesMade) {
+                    this.changesMade = false;
+                    this.updateTimestamp = Math.round(this.messagesUpdatedByInterval + this.messageUpdateTime * 60);
+                    this.embed = new EmbedBuilder()
                         .setColor(0x0099FF)
                         .setTitle('Discord Place')
                         .setDescription(`Will update <t:${this.updateTimestamp}:R>`)
                         .setImage('attachment://canvas.png')
                         .setTimestamp();
-                this.messageObjects[key].edit({ embeds: [this.embed], files: [this.messageFileAttachments]});
+                    this.messageObjects[key].edit({ embeds: [this.embed], files: [this.messageFileAttachments]});
+                } else {
+                    this.embed = new EmbedBuilder()
+                        .setColor(0x0099FF)
+                        .setTitle('Discord Place')
+                        .setDescription(`No changes made! Will update when you draw something new \\:D`)
+                        .setImage('attachment://canvas.png')
+                        .setTimestamp();
+                    this.messageObjects[key].edit({ embeds: [this.embed]});
+                    this.updateWhenChanged = true;
+                }
+
             }
             this.log("Messages updated")
         }
@@ -122,6 +139,15 @@ module.exports = {
             this.ctx.fillStyle = this.colors[color];
             this.ctx.fillRect(x, y, 1, 1);
             this.updateGuidelineCanvas();
+
+            this.changesMade = true;
+
+            // Update immediately if one or more updates has happened without changes
+            if (this.updateWhenChanged) {
+                this.updateWhenChanged = false;
+                this.updateMessages();
+            }
+
         }
         this.setup = async function(serverData, serverId, channelId) {
             this.currentSetupChannel = await this.client.channels.fetch(channelId);
