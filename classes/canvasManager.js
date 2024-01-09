@@ -64,10 +64,34 @@ module.exports = {
 
         this.loadMessages = async function(serverData) {
             this.messageObjects = {};
+            this.serverList = await client.guilds.fetch();
+
             for (var serverId in serverData) {
-                this.currentChannel = await this.client.channels.fetch(serverData[serverId][0])
-                this.currentMessage = await this.currentChannel.messages.fetch(serverData[serverId][1])
-                this.messageObjects[serverId] = this.currentMessage;
+                // Validate server
+                if (this.serverList.has(serverId)) {
+
+                    this.currentServer = await client.guilds.fetch(serverId);
+                    this.currentChannelList = await this.currentServer.channels.fetch();
+
+                    // Validate channel
+                    if (this.currentChannelList.has(serverData[serverId][0])) {
+
+                        try {
+                            this.currentChannel = await this.client.channels.fetch(serverData[serverId][0])
+                            this.currentMessage = await this.currentChannel.messages.fetch(serverData[serverId][1])
+                            this.messageObjects[serverId] = this.currentMessage;
+                        } catch(error) {
+                            this.log(error, true);
+                            // Eh idk what happens here, maybe resend message?
+                        }
+
+                    } else {
+                        // Delete server from serverData
+                        
+                    }
+                } else {
+                    // Delete server from serverData
+                }
             }
         }
         this.updateMessages = async function() {
@@ -82,7 +106,11 @@ module.exports = {
                         .setDescription(`Will update <t:${this.updateTimestamp}:R>`)
                         .setImage('attachment://canvas.png')
                         .setTimestamp();
-                    this.messageObjects[key].edit({ embeds: [this.embed], files: [this.messageFileAttachments]});
+                    try {
+                        this.messageObjects[key].edit({ embeds: [this.embed], files: [this.messageFileAttachments]});
+                    } catch(error) {
+                        this.log(error, true);
+                    }
                 } else {
                     this.embed = new EmbedBuilder()
                         .setColor(0x0099FF)
@@ -90,7 +118,11 @@ module.exports = {
                         .setDescription(`No changes made! Will update when you draw something new \\:D`)
                         .setImage('attachment://canvas.png')
                         .setTimestamp();
-                    this.messageObjects[key].edit({ embeds: [this.embed]});
+                    try {
+                        this.messageObjects[key].edit({ embeds: [this.embed]});
+                    } catch(error) {
+                        this.log(error, true);
+                    }
                     this.updateWhenChanged = true;
                 }
 
@@ -154,8 +186,8 @@ module.exports = {
             this.currentSetupMessage = await this.currentSetupChannel.send({embeds:  [this.embed], files: [this.messageFileAttachments] });
             serverData[serverId][1] = this.currentSetupMessage.id;
         }
-        this.log = function(message) {
-            this.logger.log(message);
+        this.log = function(message, error=false) {
+            this.logger.log(message, error);
         }
     }
 }

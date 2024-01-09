@@ -35,14 +35,21 @@ const colors = {
 module.exports = {
     Logger: function(prefix) {
         this.prefix = prefix;
-        this.log = function(message) {
+        
+        this.log = function(message, error = false) {
+            if (error) {
+                this.errorInsertion = colors.fg.red;
+            } else {
+                this.errorInsertion = "";
+            }
             console.log( colors.bg.blue +
                 `[${new Date().getFullYear()+"-"+new Date().getMonth()+"-"+new Date().getDay()+" "+new Date().getHours()+":"+new Date().getMinutes()+":"+new Date().getSeconds() +":"+new Date().getMilliseconds()}]` +
                 colors.reset,
                 colors.bg.green +
                 '[' + this.prefix + ']' +
-                colors.reset,
-                message
+                colors.reset + this.errorInsertion,
+                message + 
+                colors.reset
             );
         }
     }
