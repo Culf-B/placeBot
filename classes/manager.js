@@ -21,6 +21,11 @@ module.exports = {
             this.canvasManager.updateMessages();
             // Message update interval
             setInterval(() => {
+                    // Autosave canvas if changes has been made
+                    if (this.canvasManager.canvasChanged) {
+                        this.canvasManager.save();
+                    }
+                    // Update messages
                     this.canvasManager.messagesUpdatedByInterval = Math.round(Date.now() / 1000)
                     this.canvasManager.updateMessages()
                 },
