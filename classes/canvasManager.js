@@ -61,43 +61,68 @@ module.exports = {
                 });
             });
         }
+        this.getMessage = async function(serverId, channelId, messageId, clientServerList) {
+            /*
+            Get a message
+            Will return with message object if the message validation succeeded
+            Will return with undefined if message validation failed
+            */
 
-        this.loadMessages = async function(serverData) {
+            // Validate server
+            if (clientServerList.has(serverId)) {
+
+                // Get info from server
+                this.currentServer = await client.guilds.fetch(serverId);
+                this.currentChannelList = await this.currentServer.channels.fetch();
+
+                // Validate channel
+                if (this.currentChannelList.has(channelId)) {
+
+                    // Get info from channel
+                    try { // Validate message
+                        this.currentChannel = await this.client.channels.fetch(channelId);
+                        this.currentMessage = await this.currentChannel.messages.fetch(messageId);
+                        return this.currentMessage;
+
+                    } catch(error) { // Invalid message
+                        this.log("Message is invalid! Message ID: " + messageId + "\n" + error, true);
+                    }
+                    
+                } else { // Invalid channel
+                    this.log("Channel is invalid! Channel ID: " + channelId, true);
+                }
+
+            } else { // Invalid server
+                this.log("Server is invalid! Server ID: " + serverId, true);
+            }
+            return undefined;
+        }
+
+        this.loadMessages = async function(serverData, deleteServerDataFunction) {
             this.messageObjects = {};
-            this.serverList = await client.guilds.fetch();
+            this.tempInvalidServers = [];
+            this.clientServerList = await this.client.guilds.fetch();
 
             for (var serverId in serverData) {
-                // Validate server
-                if (this.serverList.has(serverId)) {
 
-                    this.currentServer = await client.guilds.fetch(serverId);
-                    this.currentChannelList = await this.currentServer.channels.fetch();
+                // Get message from server
+                this.currentMessage = await this.getMessage(serverId, serverData[serverId][0], serverData[serverId][1], this.clientServerList);
 
-                    // Validate channel
-                    if (this.currentChannelList.has(serverData[serverId][0])) {
-
-                        try {
-                            this.currentChannel = await this.client.channels.fetch(serverData[serverId][0])
-                            this.currentMessage = await this.currentChannel.messages.fetch(serverData[serverId][1])
-                            this.messageObjects[serverId] = this.currentMessage;
-                        } catch(error) {
-                            this.log(error, true);
-                            // Eh idk what happens here, maybe resend message?
-                        }
-
-                    } else {
-                        // Delete server from serverData
-                        
-                    }
+                // Check if message was valid
+                if (this.currentMessage != undefined) {
+                    // Save loaded message data
+                    this.messageObjects[serverId] = this.currentMessage;
                 } else {
-                    // Delete server from serverData
+                    // Delete data from server so that the server needs to be setup again
+                    this.tempInvalidServers.push(serverId);
                 }
             }
+            return this.tempInvalidServers;
         }
         this.updateMessages = async function() {
             this.updateAttachments();
             for (var key in this.messageObjects) {
-                if (this.changesMade) {
+                if (this.changesMade) { // Update message
                     this.changesMade = false;
                     this.updateTimestamp = Math.round(this.messagesUpdatedByInterval + this.messageUpdateTime * 60);
                     this.embed = new EmbedBuilder()
@@ -111,7 +136,7 @@ module.exports = {
                     } catch(error) {
                         this.log(error, true);
                     }
-                } else {
+                } else { // Update canvas description to no changes made description
                     this.embed = new EmbedBuilder()
                         .setColor(0x0099FF)
                         .setTitle('Discord Place')
@@ -125,9 +150,8 @@ module.exports = {
                     }
                     this.updateWhenChanged = true;
                 }
-
             }
-            this.log("Messages updated")
+            this.log("Messages updated");
         }
         this.save = function() {
             fs.writeFileSync('./data/canvas.png', this.canvas.toBuffer('image/png'));

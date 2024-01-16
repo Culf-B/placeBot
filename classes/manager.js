@@ -10,7 +10,11 @@ module.exports = {
 
         this.tokenRequiredLoading = async function() {
             // Load messages
-            await this.canvasManager.loadMessages(this.serverManager.servers);
+            this.canvasManager.log("Loading messages...");
+            this.tempInvalidServers = await this.canvasManager.loadMessages(this.serverManager.servers);
+            this.tempInvalidServers.forEach(serverId => {
+                this.serverManager.deleteServerData(serverId);
+            });
             this.canvasManager.log("Messages loaded");
             // Update messages
             this.canvasManager.messagesUpdatedByInterval = Math.round(Date.now() / 1000)

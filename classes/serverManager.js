@@ -14,6 +14,13 @@ module.exports = {
 
         this.save = function() {
             fs.writeFileSync('./data/serverdata.json', JSON.stringify(this.servers));
+            this.log("Saved serverdata");
+        }
+
+        this.deleteServerData = function(serverId) {
+            delete this.servers[serverId];
+            this.log("Deleted serverdata for server with ID: " + serverId);
+            this.save();
         }
 
         this.updateServerChannel = async function(canvasManager, serverId, channelId) {
