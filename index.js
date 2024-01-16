@@ -19,11 +19,26 @@ for (const file of commandFiles) {
 
 client.cooldowns = new Collection();
 
+// Bad stuff events
+client.on('invalidated', () => {
+    logger.log(`invalidated`, true);
+});
+
+client.on('invalidRequestWarning', (invalidRequestWarningData) => {
+    logger.log(`invalidRequestWarning: ${invalidRequestWarningData}`, true);
+});
+
+client.on('warn', (info) => {
+    logger.log(`warn: ${info}`, true);
+});
+
+// Client login
 client.once('ready', () => {
 	logger.log('Client is ready');
 	manager.tokenRequiredLoading();
 });
 
+// Functionality event handling
 client.on('interactionCreate', async interaction => {
 	// Validate input
 	if (!interaction.isCommand()) return;
@@ -65,4 +80,5 @@ client.on('interactionCreate', async interaction => {
 	}
 });
 
+// Client login
 client.login(token);
