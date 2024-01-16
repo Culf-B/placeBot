@@ -38,7 +38,7 @@ module.exports = {
             } else {
                 this.servers[serverId] = [channelId, undefined];
                 // Setup channel image message with canvasManager
-                canvasManager.setup(serverId, channelId);
+                await canvasManager.setup(this.servers, serverId, channelId);
                 // Save
                 this.save();
             }

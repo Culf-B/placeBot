@@ -156,7 +156,7 @@ module.exports = {
         this.save = function() {
             fs.writeFileSync('./data/canvas.png', this.canvas.toBuffer('image/png'));
             fs.writeFileSync('./data/test.png', this.guidelineCanvas.toBuffer('image/png'));
-            this.log("Canvas saved")
+            this.log("Canvas saved");
         }
 
         this.updateGuidelineCanvas = function() {
@@ -201,6 +201,7 @@ module.exports = {
             // Update immediately if one or more updates has happened without changes
             if (this.updateWhenChanged) {
                 this.updateWhenChanged = false;
+                this.save();
                 this.updateMessages();
             }
 
