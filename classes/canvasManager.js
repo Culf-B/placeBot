@@ -12,7 +12,7 @@ module.exports = {
         this.embed;
         this.messageFileAttachments;
         this.messageObjects;
-        this.messageUpdateTime = 5 // minutes
+        this.messageUpdateTime = 5; // minutes
         this.canvasChanged = false;
         this.messagesUpdatedByInterval;
 
@@ -98,7 +98,7 @@ module.exports = {
             return undefined;
         }
 
-        this.loadMessages = async function(serverData, deleteServerDataFunction) {
+        this.loadMessages = async function(serverData) {
             this.messageObjects = {};
             this.tempInvalidServers = [];
             this.clientServerList = await this.client.guilds.fetch();

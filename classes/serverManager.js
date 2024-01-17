@@ -24,7 +24,7 @@ module.exports = {
         }
 
         this.getServerData = function(serverId) {
-            return this.servers[serverId]
+            return this.servers[serverId];
         }
 
         this.updateServerChannel = async function(canvasManager, serverId, channelId) {
