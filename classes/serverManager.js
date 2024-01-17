@@ -23,6 +23,10 @@ module.exports = {
             this.save();
         }
 
+        this.getServerData = function(serverId) {
+            return this.servers[serverId]
+        }
+
         this.updateServerChannel = async function(canvasManager, serverId, channelId) {
             // If this server has never been setup before, setup data structure first
             if (this.servers[serverId] != undefined) {
