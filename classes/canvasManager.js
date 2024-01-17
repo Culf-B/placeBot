@@ -210,6 +210,8 @@ module.exports = {
             this.currentSetupChannel = await this.client.channels.fetch(channelId);
             this.currentSetupMessage = await this.currentSetupChannel.send({embeds:  [this.embed], files: [this.messageFileAttachments] });
             serverData[serverId][1] = this.currentSetupMessage.id;
+            // Load the new message into the currently loaded message objects so that it will be updated with the other messages
+            this.messageObjects[serverId] = this.currentSetupMessage;
         }
         this.log = function(message, error=false) {
             this.logger.log(message, error);

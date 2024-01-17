@@ -38,6 +38,8 @@ module.exports = {
                     await canvasManager.setup(this.servers, serverId, channelId);
                     // Save
                     this.save();
+                } else {
+                    return;
                 }
             } else {
                 this.servers[serverId] = [channelId, undefined];
@@ -46,6 +48,7 @@ module.exports = {
                 // Save
                 this.save();
             }
+            this.log(`Setup complete for server: ${serverId}`);
         }
         this.log = function(message) {
             this.logger.log(message);
