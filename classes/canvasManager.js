@@ -1,4 +1,4 @@
-const { createCanvas, loadImage } = require('canvas');
+const Jimp = require("jimp");
 const { width, height, gsMultiplier } = require('../data/canvasProperties.json');
 const fs = require('node:fs');
 const gWidth = (width + 1) * gsMultiplier;
@@ -18,47 +18,39 @@ module.exports = {
 
         this.logger = new logger.Logger('CanvasManager');
 
-        this.canvas = createCanvas(width, height);
-        this.ctx = this.canvas.getContext('2d');
-        
-        this.ctx.webkitImageSmoothingEnabled = false;
-        this.ctx.mozImageSmoothingEnabled = false;
-        this.ctx.imageSmoothingEnabled = false;
+        this.canvas = new Jimp(width, height);
 
-        this.guidelineTemplateCanvas = createCanvas(gWidth, gHeight);
-        this.gtCtx = this.guidelineTemplateCanvas.getContext('2d');
+        this.guidelineTemplateCanvas = new Jimp(gWidth, gHeight);
 
-        this.guidelineCanvas = createCanvas(gWidth, gHeight)
-        this.gCtx = this.guidelineCanvas.getContext('2d');
-
-        this.gCtx.webkitImageSmoothingEnabled = false;
-        this.gCtx.mozImageSmoothingEnabled = false;
-        this.gCtx.imageSmoothingEnabled = false;
+        this.guidelineCanvas = new Jimp(gWidth, gHeight);
 
         this.changesMade = false;
         this.updateWhenChanged = true;
 
         this.load = function() {
-            loadImage('./data/canvas.png').then((image) => {
-                this.ctx.drawImage(image, 0, 0, width, height);
+            Jimp.read('./data/canvas.png')
+                .then((image) => {
+                
+                    this.canvas.blit(image, 0, 0);
 
-                loadImage('./data/guidelineCanvas.png').then((image) => {
-                    this.gtCtx.drawImage(image, 0, 0, gWidth, gHeight);
+                    Jimp.read('./data/guidelineCanvas.png')
+                        .then((image) => {
+                            this.guidelineTemplateCanvas.blit(image, 0, 0);
 
-                    this.updateGuidelineCanvas();
+                            this.updateGuidelineCanvas();
 
-                    this.log("Canvas loaded");
+                            this.log("Canvas loaded");
 
-                    this.updateAttachments();
-                    this.embed = new EmbedBuilder()
-                        .setColor(0x0099FF)
-                        .setTitle('Discord Place')
-                        .setDescription('Will update in ???')
-                        .setImage('attachment://canvas.png')
-                        .setTimestamp();
-    
-                    this.log("Embed loaded");
-                });
+                            this.updateAttachments();
+                            this.embed = new EmbedBuilder()
+                                .setColor(0x0099FF)
+                                .setTitle('Discord Place')
+                                .setDescription('Will update in ???')
+                                .setImage('attachment://canvas.png')
+                                .setTimestamp();
+            
+                            this.log("Embed loaded");
+                    });
             });
         }
         this.getMessage = async function(serverId, channelId, messageId, clientServerList) {
@@ -154,46 +146,56 @@ module.exports = {
             this.log("Messages updated");
         }
         this.save = function() {
-            fs.writeFileSync('./data/canvas.png', this.canvas.toBuffer('image/png'));
-            fs.writeFileSync('./data/test.png', this.guidelineCanvas.toBuffer('image/png'));
-            this.log("Canvas saved");
+            this.canvas.getBuffer('image/png', (err, buffer) => {
+                fs.writeFileSync('./data/canvas.png', buffer);
+                this.log("Canvas saved");
+            });
+            this.guidelineCanvas.getBuffer('image/png', (err, buffer) => {
+                fs.writeFileSync('./data/test.png', buffer);
+                this.log("Guideline canvas saved");
+            });
         }
 
-        this.updateGuidelineCanvas = function() {
-            this.gCtx.fillStyle = 'white';
-            this.gCtx.fillRect(0, 0, gWidth, gHeight);
-            this.ctx.save();
-            this.ctx.scale(gsMultiplier, gsMultiplier);
-            this.gCtx.drawImage(this.canvas, gsMultiplier, gsMultiplier, gWidth - gsMultiplier, gHeight - gsMultiplier);
-            this.ctx.restore();
-            this.gCtx.drawImage(this.guidelineTemplateCanvas, 0, 0, gWidth, gHeight);
+        this.updateGuidelineCanvas = function(callback = () => {}) {
+            new Jimp(gWidth, gHeight, 0xffffffff, (err, image) => {
+                this.guidelineCanvas = image;
+                this.canvasResize = this.canvas.clone();
+                this.canvasResize.resize(width * gsMultiplier, width * gsMultiplier, Jimp.RESIZE_NEAREST_NEIGHBOR);
+                this.guidelineCanvas.blit(this.canvasResize, gsMultiplier, gsMultiplier);
+                this.guidelineCanvas.blit(this.guidelineTemplateCanvas, 0, 0);
+
+                callback();
+            })
         }
         
         this.updateAttachments = function() {
-            this.updateGuidelineCanvas();
-            this.messageFileAttachments = new AttachmentBuilder(this.guidelineCanvas.toBuffer('image/png'), {'name': 'canvas.png'});
+            this.updateGuidelineCanvas(() => {
+                this.guidelineCanvas.getBuffer('image/png', (err, buffer) => {
+                    this.messageFileAttachments = new AttachmentBuilder(buffer, {'name': 'canvas.png'});
+                });
+            });
         }
         
         this.draw = function(x, y, color) {
             this.colors = {
-                red: '#ff4500',
-                orange: '#ffa800',
-                yellow: '#ffd635',
-                dark_green: '#00a368',
-                light_green: '#7eed56',
-                dark_blue: '#2450a4',
-                blue: '#3690ea',
-                light_blue: '#51e9f4',
-                dark_purple: '#811e9f',
-                purple: '#b44ac0',
-                light_pink: '#ff99aa',
-                brown: '#9c6926',
-                black: '#000000',
-                gray: '#898d90',
-                white: '#ffffff',
+                red: 0xff4500ff,
+                orange: 0xffa800ff,
+                yellow: 0xffd635ff,
+                dark_green: 0x00a368ff,
+                light_green: 0x7eed56ff,
+                dark_blue: 0x2450a4ff,
+                blue: 0x3690eaff,
+                light_blue: 0x51e9f4ff,
+                dark_purple: 0x811e9fff,
+                purple: 0xb44ac0ff,
+                light_pink: 0xff99aaff,
+                brown: 0x9c6926ff,
+                black: 0x000000ff,
+                gray: 0x898d90ff,
+                white: 0xffffffff
             }
-            this.ctx.fillStyle = this.colors[color];
-            this.ctx.fillRect(x, y, 1, 1);
+
+            this.canvas.setPixelColor(this.colors[color], x, y);
             this.updateGuidelineCanvas();
 
             this.changesMade = true;
