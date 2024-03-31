@@ -13,7 +13,6 @@ module.exports = {
         this.messageFileAttachments;
         this.messageObjects;
         this.messageUpdateTime = 5; // minutes
-        this.canvasChanged = false;
         this.messagesUpdatedByInterval;
 
         this.logger = new logger.Logger('CanvasManager');
@@ -112,7 +111,7 @@ module.exports = {
             return this.tempInvalidServers;
         }
         this.updateMessages = async function() {
-            this.updateAttachments();
+            await this.updateAttachments();
             for (var key in this.messageObjects) {
                 if (this.changesMade) { // Update message
                     this.changesMade = false;
@@ -156,27 +155,22 @@ module.exports = {
             });
         }
 
-        this.updateGuidelineCanvas = function(callback = () => {}) {
-            new Jimp(gWidth, gHeight, 0xffffffff, (err, image) => {
-                this.guidelineCanvas = image;
-                this.canvasResize = this.canvas.clone();
-                this.canvasResize.resize(width * gsMultiplier, width * gsMultiplier, Jimp.RESIZE_NEAREST_NEIGHBOR);
-                this.guidelineCanvas.blit(this.canvasResize, gsMultiplier, gsMultiplier);
-                this.guidelineCanvas.blit(this.guidelineTemplateCanvas, 0, 0);
-
-                callback();
+        this.updateGuidelineCanvas = async function() {
+            this.guidelineCanvas = await new Jimp(gWidth, gHeight, 0xffffffff);
+            this.canvasResize = await this.canvas.clone();
+            await this.canvasResize.resize(width * gsMultiplier, width * gsMultiplier, Jimp.RESIZE_NEAREST_NEIGHBOR);
+            await this.guidelineCanvas.blit(this.canvasResize, gsMultiplier, gsMultiplier);
+            await this.guidelineCanvas.blit(this.guidelineTemplateCanvas, 0, 0);
+        }
+        
+        this.updateAttachments = async function() {
+            await this.updateGuidelineCanvas();
+            this.guidelineCanvas.getBuffer('image/png', (err, buffer) => {
+                this.messageFileAttachments = new AttachmentBuilder(buffer, {'name': 'canvas.png'});
             });
         }
         
-        this.updateAttachments = function() {
-            this.updateGuidelineCanvas(() => {
-                this.guidelineCanvas.getBuffer('image/png', (err, buffer) => {
-                    this.messageFileAttachments = new AttachmentBuilder(buffer, {'name': 'canvas.png'});
-                });
-            });
-        }
-        
-        this.draw = function(x, y, color) {
+        this.draw = async function(x, y, color) {
             this.colors = {
                 red: 0xff4500ff,
                 orange: 0xffa800ff,
@@ -195,17 +189,16 @@ module.exports = {
                 white: 0xffffffff
             }
 
-            this.canvas.setPixelColor(this.colors[color], x, y);
-            this.updateGuidelineCanvas(() => {
-                this.changesMade = true;
+            await this.canvas.setPixelColor(this.colors[color], x, y);
+            await this.updateGuidelineCanvas();
 
-                // Update immediately if one or more updates has happened without changes
-                if (this.updateWhenChanged) {
-                    this.updateWhenChanged = false;
-                    this.save();
-                    this.updateMessages();
-                }
-            });
+            this.changesMade = true;
+            // Update immediately if one or more updates has happened without changes
+            if (this.updateWhenChanged) {
+                this.updateWhenChanged = false;
+                await this.save();
+                await this.updateMessages();
+            }
         }
 
         this.setup = async function(serverData, serverId, channelId) {
