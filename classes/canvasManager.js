@@ -165,7 +165,7 @@ module.exports = {
                 this.guidelineCanvas.blit(this.guidelineTemplateCanvas, 0, 0);
 
                 callback();
-            })
+            });
         }
         
         this.updateAttachments = function() {
