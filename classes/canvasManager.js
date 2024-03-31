@@ -196,18 +196,18 @@ module.exports = {
             }
 
             this.canvas.setPixelColor(this.colors[color], x, y);
-            this.updateGuidelineCanvas();
+            this.updateGuidelineCanvas(() => {
+                this.changesMade = true;
 
-            this.changesMade = true;
-
-            // Update immediately if one or more updates has happened without changes
-            if (this.updateWhenChanged) {
-                this.updateWhenChanged = false;
-                this.save();
-                this.updateMessages();
-            }
-
+                // Update immediately if one or more updates has happened without changes
+                if (this.updateWhenChanged) {
+                    this.updateWhenChanged = false;
+                    this.save();
+                    this.updateMessages();
+                }
+            });
         }
+
         this.setup = async function(serverData, serverId, channelId) {
             this.currentSetupChannel = await this.client.channels.fetch(channelId);
             this.currentSetupMessage = await this.currentSetupChannel.send({embeds:  [this.embed], files: [this.messageFileAttachments] });
