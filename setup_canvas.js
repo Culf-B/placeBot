@@ -1,39 +1,46 @@
-const { createCanvas, loadImage } = require('canvas');
+const Jimp = require("jimp");
 const fs = require('node:fs');
-const { width, height, gsMultiplier } = require('./data/canvasProperties.json')
+const { width, height, gsMultiplier } = require('./data/canvasProperties.json');
 
-// Create blank canvas
-canvas = createCanvas(width, height);
-ctx = canvas.getContext('2d');
+canvas = new Jimp(width, height, 0xFFFFFFFF);
 
-ctx.fillStyle = 'white';
-ctx.fillRect(0, 0, width, height); 
+canvas.getBuffer('image/png', (err, buffer) => {
+    fs.writeFileSync('./data/canvas.png', buffer);
+})
 
-fs.writeFileSync('./data/canvas.png', canvas.toBuffer("image/png"));
+canvas = new Jimp((width + 1) * gsMultiplier, (height + 1) * gsMultiplier);
 
-// Create Blank guideline canvas
-canvas = createCanvas((width + 1) * gsMultiplier, (height + 1) * gsMultiplier);
-ctx = canvas.getContext('2d');
+color = 0x000000ff;
 
-ctx.strokeStyle = 'black';
-ctx.fillStyle = 'black';
-ctx.lineWidth = 1;
-ctx.font = "10px serif";
+Jimp.loadFont(Jimp.FONT_SANS_10_BLACK).then((font) => {
+    // Vertical
+    for (i = 0; i < width + 1; i++) {
+        // Lines
+        for (j = 0; j < (height + 1) * gsMultiplier; j++) {
+            canvas.setPixelColor(color, i * gsMultiplier, j);
+        }
 
-for (i = 0; i < width + 1; i++) {
-    ctx.moveTo(i * gsMultiplier, 0);
-    ctx.lineTo(i * gsMultiplier, (height + 1) * gsMultiplier);
-    if (i > 0) {
-        ctx.fillText(i - 1, i * gsMultiplier + gsMultiplier/10, gsMultiplier * 0.9);
+        // Text
+        if (i > 0) {
+            canvas.print(font, i * gsMultiplier + gsMultiplier/10, 0, i - 1);
+        }
     }
-}
-for (i = 0; i < height + 1; i++) {
-    ctx.moveTo(0, i * gsMultiplier);
-    ctx.lineTo((width + 1) * gsMultiplier, i * gsMultiplier);
-    if (i > 0) {
-        ctx.fillText(i - 1, gsMultiplier/10, (i + 0.9) * gsMultiplier);
-    }
-}
-ctx.stroke();
 
-fs.writeFileSync('./data/guidelineCanvas.png', canvas.toBuffer("image/png"));
+    // Horisontal
+    for (i = 0; i < height + 1; i++) {
+        // Lines
+        for (j = 0; j < (width + 1) * gsMultiplier; j++) {
+            canvas.setPixelColor(color, j, i * gsMultiplier);
+        }
+
+        // Text
+        if (i > 0) {
+            canvas.print(font, gsMultiplier/8, i * gsMultiplier, i - 1);
+        }
+    }
+
+    // Save
+    canvas.getBuffer('image/png', (err, buffer) => {
+        fs.writeFileSync('./data/guidelineCanvas.png', buffer);
+    })
+});
