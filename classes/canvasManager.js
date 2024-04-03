@@ -114,7 +114,6 @@ module.exports = {
             await this.updateAttachments();
             for (var key in this.messageObjects) {
                 if (this.changesMade) { // Update message
-                    this.changesMade = false;
                     this.updateTimestamp = Math.round(this.messagesUpdatedByInterval + this.messageUpdateTime * 60);
                     this.embed = new EmbedBuilder()
                         .setColor(0x0099FF)
@@ -142,6 +141,7 @@ module.exports = {
                     this.updateWhenChanged = true;
                 }
             }
+            this.changesMade = false;
             this.log("Messages updated");
         }
         this.save = function() {
