@@ -7,13 +7,15 @@ const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const logger = require('../tools/logger.js');
 
 module.exports = {
-    CanvasManager: function(client) {
+    CanvasManager: function(client, serverManager) {
         this.client = client;
         this.embed;
         this.messageFileAttachments;
         this.messageObjects;
         this.messageUpdateTime = 5; // minutes
         this.messagesUpdatedByInterval;
+
+        this.serverManager = serverManager;
 
         this.logger = new logger.Logger('CanvasManager');
 
@@ -121,11 +123,15 @@ module.exports = {
                         .setDescription(`Will update <t:${this.updateTimestamp}:R>`)
                         .setImage('attachment://canvas.png')
                         .setTimestamp();
-                    try {
-                        this.messageObjects[key].edit({ embeds: [this.embed], files: [this.messageFileAttachments]});
-                    } catch(error) {
-                        this.log(error, true);
-                    }
+
+                    this.messageObjects[key]
+                        .edit({ embeds: [this.embed], files: [this.messageFileAttachments]})
+                        .catch((error) => {
+                            this.log(error, true);
+                            delete this.messageObjects[key];
+                            this.serverManager.deleteServerData(key);
+                        });
+
                 } else { // Update canvas description to no changes made description
                     this.embed = new EmbedBuilder()
                         .setColor(0x0099FF)
@@ -133,11 +139,15 @@ module.exports = {
                         .setDescription(`No changes made! Will update when you draw something new \\:D`)
                         .setImage('attachment://canvas.png')
                         .setTimestamp();
-                    try {
-                        this.messageObjects[key].edit({ embeds: [this.embed]});
-                    } catch(error) {
-                        this.log(error, true);
-                    }
+
+                    this.messageObjects[key]
+                        .edit({ embeds: [this.embed]})
+                        .catch((error) => {
+                            this.log(error, true);
+                            delete this.messageObjects[key];
+                            this.serverManager.deleteServerData(key);
+                        });
+
                     this.updateWhenChanged = true;
                 }
             }

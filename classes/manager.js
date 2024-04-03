@@ -1,10 +1,11 @@
 const CanvasManager = require('./canvasManager.js');
+const serverManager = require('./serverManager.js');
 const ServerManager = require('./serverManager.js');
 
 module.exports = {
     Manager: function(client){
-        this.canvasManager = new CanvasManager.CanvasManager(client);
         this.serverManager = new ServerManager.ServerManager();
+        this.canvasManager = new CanvasManager.CanvasManager(client, this.serverManager);
         this.canvasManager.load();
         this.serverManager.load(); 
 
